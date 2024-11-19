@@ -73,36 +73,6 @@ class Queens8App(kivy.app.App):
             for row_idx, col_idx in enumerate(current_solution):
                 self.population_board[solution_idx, row_idx, col_idx] = 1
 
-    def reset_board_text(self):
-        for row_idx in range(self.all_widgets.shape[0]):
-            for col_idx in range(self.all_widgets.shape[1]):
-                self.all_widgets[row_idx, col_idx].text = "[color=262626]" + str(row_idx) + ", " + str(col_idx) + "[/color]"
-                with self.all_widgets[row_idx, col_idx].canvas.before:
-                    kivy.graphics.Color(0, 0, 0, 1)
-                    self.rect = kivy.graphics.Rectangle(size=self.all_widgets[row_idx, col_idx].size, pos=self.all_widgets[row_idx, col_idx].pos)
-
-    def update_board_UI(self, *args):
-        if not self.pop_created:
-            return
-
-        self.reset_board_text()
-
-        population_fitness, total_num_attacks = self.fitness(self.population_board)
-
-        max_fitness = numpy.max(population_fitness)
-        max_fitness_idx = numpy.where(population_fitness == max_fitness)[0][0]
-        best_solution = self.population_board[max_fitness_idx, :]
-
-        self.num_attacks_Label.text = "Max Fitness = " + str(numpy.round(max_fitness, 4)) + "\n# Attacks = " + str(total_num_attacks[max_fitness_idx])
-
-        for row_idx in range(8):
-            for col_idx in range(8):
-                if best_solution[row_idx, col_idx] == 1:
-                    self.all_widgets[row_idx, col_idx].text = "[color=ffcc00]Queen[/color]"
-                    with self.all_widgets[row_idx, col_idx].canvas.before:
-                        kivy.graphics.Color(0, 1, 0, 1)
-                        self.rect = kivy.graphics.Rectangle(size=self.all_widgets[row_idx, col_idx].size, pos=self.all_widgets[row_idx, col_idx].pos)
-
     def fitness(self, population_board):
         total_num_attacks_column = self.attacks_column(self.population_board)
         total_num_attacks_diagonal = self.attacks_diagonal(self.population_board)
@@ -181,28 +151,75 @@ class Queens8App(kivy.app.App):
 
         return total_num_attacks
 
+    def reset_board_text(self):
+        for row_idx in range(self.all_widgets.shape[0]):
+            for col_idx in range(self.all_widgets.shape[1]):
+                # Ustawienie pustego tekstu dla wszystkich pól
+                self.all_widgets[row_idx, col_idx].text = ""
+                # Kolor tła pól pozostaje czarno-biały
+                with self.all_widgets[row_idx, col_idx].canvas.before:
+                    kivy.graphics.Color(0, 0, 0, 1)
+                    self.rect = kivy.graphics.Rectangle(size=self.all_widgets[row_idx, col_idx].size,
+                                                        pos=self.all_widgets[row_idx, col_idx].pos)
+
+    def update_board_UI(self, *args):
+        if not self.pop_created:
+            return
+
+        self.reset_board_text()
+
+        population_fitness, total_num_attacks = self.fitness(self.population_board)
+
+        max_fitness = numpy.max(population_fitness)
+        max_fitness_idx = numpy.where(population_fitness == max_fitness)[0][0]
+        best_solution = self.population_board[max_fitness_idx, :]
+
+        self.num_attacks_Label.text = "Max Fitness = " + str(numpy.round(max_fitness, 4)) + "\n# Attacks = " + str(
+            total_num_attacks[max_fitness_idx])
+
+        for row_idx in range(8):
+            for col_idx in range(8):
+                if best_solution[row_idx, col_idx] == 1:
+                    self.all_widgets[row_idx, col_idx].text = "w"
+                    self.all_widgets[row_idx, col_idx].color = (1, 209/255, 0, 1)
+                    with self.all_widgets[row_idx, col_idx].canvas.before:
+                        kivy.graphics.Color(0, 1, 0, 1)
+                        self.rect = kivy.graphics.Rectangle(size=self.all_widgets[row_idx, col_idx].size,
+                                                            pos=self.all_widgets[row_idx, col_idx].pos)
 
     def build(self):
         """
-        Builds the graphical user interface (GUI) for the application, 
+        Builds the graphical user interface (GUI) for the application,
         including the chessboard and control buttons for GA operations.
         """
-        boxLayout = kivy.uix.boxlayout.BoxLayout(orientation="vertical")
+        boxLayout = kivy.uix.boxlayout.BoxLayout(orientation="vertical" )
 
-        gridLayout = kivy.uix.gridlayout.GridLayout(rows=8, size_hint_y=9)
-        boxLayout_buttons = kivy.uix.boxlayout.BoxLayout(orientation="horizontal")
+        # Grid layout for the chessboard
+        gridLayout = kivy.uix.gridlayout.GridLayout(rows=8, cols=8, size_hint_y=80)
+        boxLayout_buttons = kivy.uix.boxlayout.BoxLayout(orientation="horizontal", size_hint_y=8)
 
         boxLayout.add_widget(gridLayout)
         boxLayout.add_widget(boxLayout_buttons)
 
+        # Initialize the chessboard widget array
         self.all_widgets = numpy.zeros(shape=(8, 8), dtype="O")
 
+        # Add buttons to the chessboard with alternating colors
         for row_idx in range(self.all_widgets.shape[0]):
             for col_idx in range(self.all_widgets.shape[1]):
-                self.all_widgets[row_idx, col_idx] = kivy.uix.button.Button(text=str(row_idx) + ", " + str(col_idx), font_size=25)
-                self.all_widgets[row_idx, col_idx].markup = True
-                gridLayout.add_widget(self.all_widgets[row_idx, col_idx])
+                # Create a button for each square
+                button = kivy.uix.button.Button(font_size=50, background_normal="", font_name="assets/chess.ttf", background_down="")
+                # Alternate colors: white and black
+                if (row_idx + col_idx) % 2 == 0:
+                    button.background_color = (1, 1, 1, 1)  # White square
+                else:
+                    button.background_color = (0, 0, 0, 1)  # Black square
 
+                # Add button to the grid and the widget array
+                self.all_widgets[row_idx, col_idx] = button
+                gridLayout.add_widget(button)
+
+        # Buttons for Genetic Algorithm operations
         ga_solution_button = kivy.uix.button.Button(text="Show Best Solution", font_size=15, size_hint_x=2)
         ga_solution_button.bind(on_press=self.update_board_UI)
 
@@ -210,7 +227,7 @@ class Queens8App(kivy.app.App):
         start_ga_button.bind(on_press=self.start_ga)
 
         # Inputs for GA parameters
-        self.num_solutions_TextInput = kivy.uix.textinput.TextInput(text="150", font_size=20, size_hint_x=1)
+        self.num_solutions_TextInput = kivy.uix.textinput.TextInput(text="250", font_size=20, size_hint_x=1)
         self.num_generations_TextInput = kivy.uix.textinput.TextInput(text="500", font_size=20, size_hint_x=1)
         self.num_mutations_TextInput = kivy.uix.textinput.TextInput(text="5", font_size=20, size_hint_x=1)
 
@@ -227,9 +244,8 @@ class Queens8App(kivy.app.App):
 
         return boxLayout
 
-from kivy.config import Config
-Config.set('graphics', 'width', '1000')
-Config.set('graphics', 'height', '600')
+from kivy.core.window import Window
+Window.size = (800, 880)
 
 queens = Queens8App()
 queens.run()

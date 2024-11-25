@@ -1,4 +1,5 @@
 import numpy
+N = 8
 
 def select_parents(pop, fitness, num_parents):
     parents = numpy.empty((num_parents, pop.shape[1]))
@@ -23,7 +24,7 @@ def crossover(parents, offspring_size):
 def mutation(offspring_crossover, num_mutations):
     for idx in range(offspring_crossover.shape[0]):
         for mutation_num in range(num_mutations):
-            gene_idx = numpy.random.randint(low=0, high=8)  # Flip a queen's position
-            new_value = numpy.random.randint(0, 8)
+            gene_idx = numpy.random.randint(low=0, high=N)  # Flip a queen's position
+            new_value = numpy.random.randint(0, N)
             offspring_crossover[idx, gene_idx] = new_value
     return offspring_crossover

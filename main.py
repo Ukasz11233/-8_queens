@@ -8,8 +8,9 @@ import kivy.graphics
 import numpy
 import genAlg
 from kivy.clock import Clock
+from genAlg import N
 
-N = 8
+# N = 8
 class Queens8App(kivy.app.App):
     pop_created = False
 
@@ -30,6 +31,7 @@ class Queens8App(kivy.app.App):
     def run_generation(self, dt):
         if self.generation>=self.num_generations or self.best_score == 0:
             Clock.unschedule(self.run_generation)
+            print("Finished running GA")
             return
 
         # print("\n##  Generation = ", generation, "  ##\n")
@@ -275,7 +277,7 @@ class Queens8App(kivy.app.App):
         return boxLayout
 
 from kivy.core.window import Window
-Window.size = (800, 880)
+Window.size = (600,680)
 
 queens = Queens8App()
 queens.run()
